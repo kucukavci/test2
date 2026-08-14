@@ -2,922 +2,306 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2D & 3D Evrensel Parça Tasarım Aracı</title>
-    <!-- Three.js ve OrbitControls CDN -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern 3D Tasarım Aracı</title>
+    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
-        body { width: 100vw; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #1e1e1e; color: #fff; }
-
-        /* Üst Menü / Sekmeler */
-        header { height: 60px; background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #444; flex-shrink: 0; z-index: 10; flex-wrap: wrap; gap: 8px; }
-        .tabs { display: flex; gap: 8px; }
-        .tab-btn { background: #3d3d3d; border: none; color: #aaa; padding: 8px 15px; font-size: 13px; cursor: pointer; border-radius: 4px; transition: 0.3s; }
-        .tab-btn.active { background: #007acc; color: #fff; font-weight: bold; }
-        .toolbar-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-        .tool-btn { background: #444; border: none; color: #fff; padding: 8px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-        .tool-btn.active-tool { background: #28a745; }
-
-        /* Alt Menü / Proje İşlemleri */
-        .subheader { height: auto; min-height: 46px; background: #262626; display: flex; align-items: center; justify-content: space-between; padding: 6px 15px; border-bottom: 1px solid #3a3a3a; flex-shrink: 0; z-index: 9; flex-wrap: wrap; gap: 8px; }
-        #project-name { background: transparent; border: none; color: #fff; font-size: 13px; font-weight: bold; width: 170px; border-bottom: 1px dashed #555; padding: 3px 2px; }
-        #project-name:focus { outline: none; border-bottom-color: #007acc; }
-        .project-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-
-        /* Ana İçerik Alanı */
-        .content { flex: 1; position: relative; overflow: hidden; }
-        .view-pane { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
-        .view-pane.active { display: block; }
-        canvas { display: block; background: #121212; width: 100%; height: 100%; cursor: crosshair; }
-
-        /* 2D / 3D Ekran Kontrolleri (Zoom, Görünüm) */
-        .canvas-controls { position: absolute; right: 15px; top: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
-        .canvas-controls button { background: rgba(50,50,50,0.85); border: 1px solid #555; color: white; border-radius: 4px; width: 38px; height: 38px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .canvas-controls button:hover { background: #007acc; }
-        .canvas-controls button.active-tool { background: #28a745; border-color: #28a745; }
-
-        /* Düzenleme Paneli (Modal) */
-        #property-panel {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #252526; border: 1px solid #454545; padding: 20px; border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7); z-index: 1000; width: 90%; max-width: 340px;
-            max-height: 88vh; overflow-y: auto; display: none;
-        }
-        #property-panel h3 { margin-bottom: 15px; font-size: 16px; color: #007acc; border-bottom: 1px solid #3d3d3d; padding-bottom: 8px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; margin-bottom: 5px; color: #ccc; }
-        .form-group select, .form-group input[type="number"], .form-group input[type="text"] { width: 100%; padding: 10px; background: #3c3c3c; border: 1px solid #555; color: #fff; border-radius: 4px; font-size: 14px; }
-        .form-group input[type="color"] { width: 100%; height: 40px; padding: 4px; background: #3c3c3c; border: 1px solid #555; border-radius: 4px; cursor: pointer; }
-        .form-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .btn-primary { background: #007acc; color: #fff; }
-        .btn-secondary { background: #555; color: #fff; }
-        .btn-danger { background: #d9534f; color: #fff; }
-
-        /* Bilgilendirme Overlay */
-        .help-overlay {
-            position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(0,0,0,0.8);
-            padding: 8px 12px; border-radius: 5px; font-size: 11px; pointer-events: none; border: 1px solid #444; text-align: center; z-index: 5;
+        /* --- Temel Değişkenler ve Sıfırlama --- */
+        :root {
+            --bg-main: #18181b;
+            --bg-panel: #27272a;
+            --bg-topbar: #202024;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --accent: #3b82f6;
+            --border: #3f3f46;
         }
 
-        /* Parçalar Yan Paneli */
-        #parts-panel {
-            position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; background: #20232a;
-            border-left: 1px solid #3a3a3a; box-shadow: -6px 0 20px rgba(0,0,0,0.5); z-index: 950;
-            transition: right 0.25s ease; overflow-y: auto;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { 
+            display: flex; 
+            height: 100vh; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            overflow: hidden; 
         }
-        #parts-panel.open { right: 0; }
-        .side-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #333; position: sticky; top: 0; background: #20232a; z-index: 2; }
-        .side-panel-header h3 { font-size: 14px; color: #fff; }
-        .side-panel-header button { background: #3d3d3d; border: none; color: #fff; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; }
-        .part-row { display: flex; align-items: stretch; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #2a2d34; }
-        .part-info { flex: 1; cursor: pointer; font-size: 12px; color: #ddd; }
-        .part-info b { font-size: 13px; }
-        .part-actions { display: flex; flex-direction: column; gap: 4px; }
-        .part-actions button { background: #3d3d3d; border: none; color: #fff; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-        .part-actions button:hover { background: #007acc; }
-        #parts-list p { text-align: center; }
+
+        /* --- Sol Panel (Ağaç ve Özellikler) --- */
+        .sidebar {
+            width: 320px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-section h3 {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        /* Form Elemanları */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+
+        /* --- Ana İçerik Alanı --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Üst Bar */
+        .topbar {
+            height: 60px;
+            background-color: var(--bg-topbar);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .project-title { font-weight: 600; font-size: 16px; }
+
+        .toolbar { display: flex; gap: 10px; }
+        
+        .btn {
+            background-color: var(--bg-panel);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn:hover { background-color: var(--border); }
+        .btn.primary { background-color: var(--accent); border-color: var(--accent); }
+        .btn.primary:hover { background-color: #2563eb; }
+
+        /* Çalışma Alanı (2D ve 3D Yan Yana) */
+        .workspace {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .view-2d {
+            flex: 1;
+            background-color: #f8fafc; /* Milimetrik kağıt hissi için açık renk */
+            border-right: 1px solid var(--border);
+            position: relative;
+            background-image: 
+                linear-gradient(#e2e8f0 1px, transparent 1px),
+                linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px; /* Grid deseni */
+        }
+
+        .view-3d {
+            flex: 1;
+            background-color: #111111;
+            position: relative;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* Viewport Başlıkları */
+        .view-title {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .view-2d .view-title { background: rgba(255,255,255,0.8); color: #333; font-weight: bold; border: 1px solid #ccc; }
+
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('2d')">2D Çizim</button>
-            <button class="tab-btn" onclick="switchTab('3d')">3D Görünüm</button>
-        </div>
-        <div class="toolbar-btns">
-            <button class="tool-btn active-tool" id="btn-mode-draw" onclick="setMode('draw')">✏️ Çiz</button>
-            <button class="tool-btn" id="btn-mode-select" onclick="setMode('select')">👆 Seç/Düzenle</button>
-            <button class="tool-btn" id="btn-mode-pan" onclick="setMode('pan')">✋ Kaydır</button>
-        </div>
-    </header>
-
-    <div class="subheader">
-        <input id="project-name" type="text" value="Yeni Tasarım" onchange="renameProject()" title="Tasarım adı">
-        <div class="project-actions">
-            <button class="tool-btn" onclick="newProject()">🆕 Yeni</button>
-            <button class="tool-btn" onclick="togglePartsPanel()">📋 Parçalar (<span id="parts-count-badge">0</span>)</button>
-            <button class="tool-btn" onclick="exportProject()">⬇️ Dışa Aktar</button>
-            <button class="tool-btn" onclick="document.getElementById('import-file').click()">⬆️ İçe Aktar</button>
-            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importProject(this)">
-        </div>
-    </div>
-
-    <div class="content">
-        <!-- 2D Canvas Görünümü -->
-        <div id="pane-2d" class="view-pane active">
-            <div class="canvas-controls">
-                <button onclick="zoomIn()" title="Yakınlaş">+</button>
-                <button onclick="zoomOut()" title="Uzaklaş">-</button>
-                <button onclick="fitToScreen()" title="Ekrana Sığdır" style="font-size: 12px;">[ ]</button>
-            </div>
-            <canvas id="canvas2d"></canvas>
-            <div class="help-overlay" id="help-text">Mod: Ekrana dokun, parça ölçülerini gir ve ekle. Şablonlardan hızlı başlayabilirsin.</div>
-        </div>
-
-        <!-- 3D Three.js Görünümü -->
-        <div id="pane-3d" class="view-pane">
-            <div id="canvas3d-container" style="width:100%; height:100%;"></div>
-            <div class="canvas-controls">
-                <button onclick="setView('iso')" title="İzometrik Görünüm">⟁</button>
-                <button onclick="setView('top')" title="Üstten Gör">⬆</button>
-                <button onclick="setView('front')" title="Önden Gör">▣</button>
-                <button onclick="setView('side')" title="Yandan Gör">▤</button>
-                <button onclick="toggleWireframe()" id="btn-wireframe" title="Tel Kafes Aç/Kapat">▦</button>
-            </div>
-            <div class="help-overlay">Parmakla/fare ile döndür, tekerlek/kıstırma ile yakınlaş.</div>
-        </div>
-    </div>
-
-    <!-- Düzenleme Paneli -->
-    <div id="property-panel">
-        <h3 id="panel-title">Parça Özellikleri</h3>
-        <div class="form-group">
-            <label>Hazır Şablon (opsiyonel, sonra değiştirebilirsin)</label>
-            <select id="elem-template" onchange="applyTemplate()">
-                <option value="">— Serbest / Manuel —</option>
-                <option value="wall">Duvar</option>
-                <option value="door">Kapı</option>
-                <option value="window">Pencere</option>
-                <option value="column">Kolon / Direk</option>
-                <option value="leg">Ayak (Sandalye / Masa / Bank)</option>
-                <option value="seat">Oturma Yüzeyi</option>
-                <option value="backrest">Sırt Dayama</option>
-                <option value="tabletop">Tabla / Masa Üstü</option>
-                <option value="shelf">Raf</option>
-                <option value="beam">Kiriş / Çıta</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Şekil</label>
-            <select id="elem-shape" onchange="toggleShapeFields()">
-                <option value="box">Kutu (uzun panel / plaka)</option>
-                <option value="cylinder">Silindir (ayak / direk)</option>
-            </select>
-        </div>
-        <div class="form-group" id="group-length">
-            <label>Uzunluk (cm)</label>
-            <input type="number" id="elem-length" value="200" min="1" max="5000">
-        </div>
-        <div class="form-group" id="group-angle">
-            <label>Açı (Derece: 0=Sağ, 90=Aşağı, 180=Sol, 270=Yukarı)</label>
-            <input type="number" id="elem-angle" value="0" min="0" max="360">
-        </div>
-        <div class="form-group">
-            <label id="thickness-label">Kalınlık / Genişlik (cm)</label>
-            <input type="number" id="elem-thickness" value="20" min="1" max="300">
-        </div>
-        <div class="form-group">
-            <label>Yükseklik (cm)</label>
-            <input type="number" id="elem-height" value="250" min="1" max="500">
-        </div>
-        <div class="form-group">
-            <label>Taban Yüksekliği (Zeminden, cm)</label>
-            <input type="number" id="elem-elevation" value="0" min="0" max="500">
-        </div>
-        <div class="form-group">
-            <label>Renk</label>
-            <input type="color" id="elem-color" value="#8a94a6">
-        </div>
-        <div class="form-group">
-            <label>Etiket (opsiyonel, ör. "Ön Sol Ayak")</label>
-            <input type="text" id="elem-label" placeholder="ör. Ön Sol Ayak">
-        </div>
-        <div class="form-actions">
-            <button class="btn btn-danger" id="btn-delete" onclick="deleteSelectedElement()" style="display:none;">Sil</button>
-            <div style="display:flex; gap:10px; margin-left:auto;">
-                <button class="btn btn-secondary" onclick="cancelElement()">İptal</button>
-                <button class="btn btn-primary" onclick="saveElement()">Kaydet</button>
+    <!-- Sol Panel -->
+    <div class="sidebar">
+        <!-- Tasarım Ağacı (Katmanlar) -->
+        <div class="sidebar-section" style="flex: 1;">
+            <h3>Design Tree</h3>
+            <div style="font-size: 13px; color: #ccc;">
+                <p>📁 Masa Tasarımı</p>
+                <p style="margin-left: 15px; color: var(--accent);">↳ 🧊 Ön Ayak (Seçili)</p>
+                <p style="margin-left: 15px;">↳ 🧊 Arka Ayak</p>
+                <p style="margin-left: 15px;">↳ 🗄️ Üst Tabla</p>
             </div>
         </div>
-    </div>
 
-    <!-- Parçalar Yan Paneli -->
-    <div id="parts-panel">
-        <div class="side-panel-header">
-            <h3>Parçalar (<span id="parts-count">0</span>)</h3>
-            <button onclick="togglePartsPanel()">✕</button>
+        <!-- Özellikler Editörü -->
+        <div class="sidebar-section" style="flex: 1.5;">
+            <h3>Properties Editor</h3>
+            
+            <div class="form-group">
+                <label>Parça Adı</label>
+                <input type="text" value="Ön Ayak">
+            </div>
+            
+            <div class="form-group">
+                <label>Şekil</label>
+                <select>
+                    <option value="box">Kutu / Plaka</option>
+                    <option value="cylinder" selected>Silindir / Direk</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Çap (cm)</label>
+                    <input type="number" value="5">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Yükseklik (cm)</label>
+                    <input type="number" value="45">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Kot (Zeminden Yükseklik)</label>
+                <input type="number" value="0">
+            </div>
+
+            <button class="btn primary" style="width: 100%; margin-top: 10px;">Değişiklikleri Uygula</button>
         </div>
-        <div id="parts-list"></div>
     </div>
 
+    <!-- Ana İçerik -->
+    <div class="main-content">
+        
+        <!-- Üst Araç Çubuğu -->
+        <div class="topbar">
+            <div class="project-title">Arctica Studio - Masa Tasarımı</div>
+            <div class="toolbar">
+                <button class="btn">✏️ Çizgi Aracı</button>
+                <button class="btn">✋ Kaydır (Pan)</button>
+                <div style="width: 1px; background: var(--border); margin: 0 5px;"></div>
+                <button class="btn">⬇️ Dışa Aktar</button>
+            </div>
+        </div>
+
+        <!-- Çalışma Alanı (Split Screen) -->
+        <div class="workspace">
+            
+            <!-- 2D Çizim Alanı (Blueprint) -->
+            <div class="view-2d" id="container-2d">
+                <div class="view-title">2D Teknik Çizim (Üstten Görünüm)</div>
+                <canvas id="canvas2d"></canvas>
+            </div>
+
+            <!-- 3D Görüntüleme Alanı -->
+            <div class="view-3d" id="container-3d">
+                <div class="view-title">3D Perspektif</div>
+                <!-- Three.js Canvas'ı buraya eklenecek -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Temel JavaScript Bağlantıları -->
     <script>
-        // --- Durum ve Değişkenler ---
-        let currentTab = '2d';
-        let currentMode = 'draw'; // 'draw', 'select', 'pan'
-        let elements = [];
-        let startPoint = null;
-        let lastEndPoint = null;
-        let selectedElementIndex = null;
-        let projectName = 'Yeni Tasarım';
-
-        // Yeni parça eklerken hatırlanan son değerler (hızlı tekrar eklemek için)
-        let lastUsedShape = 'box';
-        let lastUsedLength = 200;
-        let lastUsedThickness = 20;
-        let lastUsedHeight = 250;
-        let lastUsedElevation = 0;
-        let lastUsedColor = '#8a94a6';
-
-        // Kamera (Pan & Zoom) Değişkenleri
-        let scale = 1;
-        let offsetX = 0;
-        let offsetY = 0;
-        let isPanning = false;
-        let isDraggingElement = false;
-        let dragOffset = { x: 0, y: 0 };
-        let panStartMouse = { x: 0, y: 0 };
-        let panStartOffset = { x: 0, y: 0 };
-
+        // --- 2D Canvas Kurulumu ---
         const canvas2d = document.getElementById('canvas2d');
         const ctx = canvas2d.getContext('2d');
+        const container2d = document.getElementById('container-2d');
 
-        // --- Hazır Şablonlar (Oda parçaları + Mobilya/nesne parçaları) ---
-        const PRESETS = {
-            wall:     { shape: 'box',      thickness: 20, height: 250, elevation: 0,  color: '#8a94a6', label: 'Duvar' },
-            door:     { shape: 'box',      thickness: 10, height: 200, elevation: 0,  color: '#dc7633', label: 'Kapı' },
-            window:   { shape: 'box',      thickness: 10, height: 100, elevation: 140, color: '#5dade2', label: 'Pencere' },
-            column:   { shape: 'box',      thickness: 20, height: 250, elevation: 0,  color: '#af7ac5', label: 'Kolon' },
-            leg:      { shape: 'cylinder', thickness: 5,  height: 45,  elevation: 0,  color: '#8d6e63', label: 'Ayak' },
-            seat:     { shape: 'box',      thickness: 45, height: 5,   elevation: 45, color: '#c9a876', label: 'Oturma Yüzeyi' },
-            backrest: { shape: 'box',      thickness: 5,  height: 40,  elevation: 50, color: '#c9a876', label: 'Sırt Dayama' },
-            tabletop: { shape: 'box',      thickness: 60, height: 4,   elevation: 75, color: '#8d6e63', label: 'Tabla' },
-            shelf:    { shape: 'box',      thickness: 30, height: 3,   elevation: 90, color: '#a1887f', label: 'Raf' },
-            beam:     { shape: 'box',      thickness: 5,  height: 5,   elevation: 0,  color: '#795548', label: 'Kiriş' }
-        };
-
-        function resizeCanvas() {
-            canvas2d.width = canvas2d.parentElement.clientWidth;
-            canvas2d.height = canvas2d.parentElement.clientHeight;
-            draw2D();
-        }
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('load', () => { resizeCanvas(); fitToScreen(); init3D(); refreshPartsList(); });
-
-        // --- Kamera ve Görünüm Kontrolleri (2D) ---
-        function zoomIn() { scale *= 1.2; draw2D(); }
-        function zoomOut() { scale /= 1.2; draw2D(); }
-        function fitToScreen() {
-            if (elements.length === 0) { scale = 1; offsetX = 0; offsetY = 0; draw2D(); return; }
-            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            elements.forEach(el => {
-                minX = Math.min(minX, el.x1, el.x2);
-                maxX = Math.max(maxX, el.x1, el.x2);
-                minY = Math.min(minY, el.y1, el.y2);
-                maxY = Math.max(maxY, el.y1, el.y2);
-            });
-            const padding = 100;
-            const w = maxX - minX || 100;
-            const h = maxY - minY || 100;
-            const scaleX = (canvas2d.width - padding) / w;
-            const scaleY = (canvas2d.height - padding) / h;
-            scale = Math.min(scaleX, scaleY);
-            if (scale > 2) scale = 2; // Maksimum yakınlaşma limiti
-            offsetX = (canvas2d.width - w * scale) / 2 - minX * scale;
-            offsetY = (canvas2d.height - h * scale) / 2 - minY * scale;
-            draw2D();
-        }
-
-        // Fare Tekerleği ile Zoom
-        canvas2d.addEventListener('wheel', (e) => {
-            if (currentTab !== '2d') return;
-            e.preventDefault();
-            const zoomFactor = 1.1;
-            const rect = canvas2d.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            const newScale = e.deltaY < 0 ? scale * zoomFactor : scale / zoomFactor;
-
-            offsetX = mouseX - (mouseX - offsetX) * (newScale / scale);
-            offsetY = mouseY - (mouseY - offsetY) * (newScale / scale);
-            scale = newScale;
-            draw2D();
-        }, { passive: false });
-
-        // --- Sekme / Mod Değişimi ---
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
-
-            if (tab === '2d') {
-                document.querySelector('.tabs button:nth-child(1)').classList.add('active');
-                document.getElementById('pane-2d').classList.add('active');
-                resizeCanvas();
-            } else {
-                document.querySelector('.tabs button:nth-child(2)').classList.add('active');
-                document.getElementById('pane-3d').classList.add('active');
-                update3DScene();
-            }
-        }
-
-        function setMode(mode) {
-            currentMode = mode;
-            document.getElementById('btn-mode-draw').classList.toggle('active-tool', mode === 'draw');
-            document.getElementById('btn-mode-select').classList.toggle('active-tool', mode === 'select');
-            document.getElementById('btn-mode-pan').classList.toggle('active-tool', mode === 'pan');
-
-            const helpText = document.getElementById('help-text');
-            if (mode === 'draw') helpText.innerText = "Mod: Ekrana dokun, parça ölçülerini gir ve ekle.";
-            else if (mode === 'select') helpText.innerText = "Mod: Bir parçaya dokunarak sürükleyebilir veya tıklayıp düzenleyebilirsin.";
-            else helpText.innerText = "Mod: Ekranı sürükleyerek kaydır (Pan).";
-        }
-
-        // Gerçek koordinatları tuvalin mantıksal (ölçeklenmiş) koordinatlarına çevirme
-        function getLogicalPos(e) {
-            const rect = canvas2d.getBoundingClientRect();
-            let cx, cy;
-            if (e.touches && e.touches.length > 0) {
-                cx = e.touches[0].clientX; cy = e.touches[0].clientY;
-            } else {
-                cx = e.clientX; cy = e.clientY;
-            }
-            return {
-                rawX: cx, rawY: cy,
-                x: (cx - rect.left - offsetX) / scale,
-                y: (cy - rect.top - offsetY) / scale
-            };
-        }
-
-        // --- Etkileşimler (Mouse / Touch) ---
-        function handleStart(e) {
-            if (currentTab !== '2d') return;
-            const pos = getLogicalPos(e);
-
-            if (currentMode === 'pan') {
-                isPanning = true;
-                panStartMouse = { x: pos.rawX, y: pos.rawY };
-                panStartOffset = { x: offsetX, y: offsetY };
-                canvas2d.style.cursor = 'grabbing';
-            }
-            else if (currentMode === 'draw') {
-                if (lastEndPoint && Math.hypot(pos.x - lastEndPoint.x, pos.y - lastEndPoint.y) < 35/scale) {
-                    startPoint = { x: lastEndPoint.x, y: lastEndPoint.y };
-                } else {
-                    startPoint = { x: pos.x, y: pos.y };
-                }
-                openPropertyPanelForNew();
-            }
-            else if (currentMode === 'select') {
-                selectedElementIndex = findElementAt(pos.x, pos.y);
-                if (selectedElementIndex !== null) {
-                    isDraggingElement = true;
-                    const el = elements[selectedElementIndex];
-                    dragOffset.x = pos.x - el.x1;
-                    dragOffset.y = pos.y - el.y1;
-                }
-            }
-            e.preventDefault();
-        }
-
-        function handleMove(e) {
-            if (currentTab !== '2d') return;
-            const pos = getLogicalPos(e);
-
-            if (isPanning) {
-                offsetX = panStartOffset.x + (pos.rawX - panStartMouse.x);
-                offsetY = panStartOffset.y + (pos.rawY - panStartMouse.y);
-                draw2D();
-            }
-            else if (isDraggingElement && selectedElementIndex !== null) {
-                const el = elements[selectedElementIndex];
-                const length = Math.hypot(el.x2 - el.x1, el.y2 - el.y1);
-                const angle = Math.atan2(el.y2 - el.y1, el.x2 - el.x1);
-
-                el.x1 = pos.x - dragOffset.x;
-                el.y1 = pos.y - dragOffset.y;
-                el.x2 = el.x1 + Math.cos(angle) * length;
-                el.y2 = el.y1 + Math.sin(angle) * length;
-                draw2D();
-            }
-            e.preventDefault();
-        }
-
-        function handleEnd(e) {
-            if (isPanning) {
-                isPanning = false;
-                canvas2d.style.cursor = 'crosshair';
-            }
-            if (isDraggingElement) {
-                isDraggingElement = false;
-                if (selectedElementIndex !== null) openPropertyPanelForEdit(selectedElementIndex);
-            }
-            e.preventDefault();
-        }
-
-        canvas2d.addEventListener('mousedown', handleStart);
-        canvas2d.addEventListener('mousemove', handleMove);
-        canvas2d.addEventListener('mouseup', handleEnd);
-
-        canvas2d.addEventListener('touchstart', handleStart, { passive: false });
-        canvas2d.addEventListener('touchmove', handleMove, { passive: false });
-        canvas2d.addEventListener('touchend', handleEnd, { passive: false });
-
-        function findElementAt(x, y) {
-            for (let i = elements.length - 1; i >= 0; i--) {
-                const el = elements[i];
-                if (el.shape === 'cylinder') {
-                    const d = Math.hypot(x - el.x1, y - el.y1);
-                    const tolerance = Math.max(el.thickness / 2, 10) + 15 / scale;
-                    if (d < tolerance) return i;
-                } else {
-                    const dist = distToSegment({ x, y }, { x: el.x1, y: el.y1 }, { x: el.x2, y: el.y2 });
-                    if (dist < 20 / scale) return i;
-                }
-            }
-            return null;
-        }
-
-        function distToSegment(p, p1, p2) {
-            const l2 = Math.hypot(p2.x - p1.x, p2.y - p1.y) ** 2;
-            if (l2 === 0) return Math.hypot(p.x - p1.x, p.y - p1.y);
-            let t = ((p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y)) / l2;
-            t = Math.max(0, Math.min(1, t));
-            return Math.hypot(p.x - (p1.x + t * (p2.x - p1.x)), p.y - (p1.y + t * (p2.y - p1.y)));
-        }
-
-        // --- 2D Çizim Motoru ---
-        function draw2D() {
+        function resize2D() {
+            canvas2d.width = container2d.clientWidth;
+            canvas2d.height = container2d.clientHeight;
+            // Test için ortada bir daire çizelim (Seçili "Ön Ayak" temsili)
             ctx.clearRect(0, 0, canvas2d.width, canvas2d.height);
-            ctx.save();
-            ctx.translate(offsetX, offsetY);
-            ctx.scale(scale, scale);
-
-            // Sonsuz Grid Görünümü
-            ctx.strokeStyle = '#222';
-            ctx.lineWidth = 1 / scale;
-            const gridSize = 40;
-            const startX = -offsetX / scale, endX = (canvas2d.width - offsetX) / scale;
-            const startY = -offsetY / scale, endY = (canvas2d.height - offsetY) / scale;
-
-            for (let x = Math.floor(startX/gridSize)*gridSize; x < endX; x += gridSize) {
-                ctx.beginPath(); ctx.moveTo(x, startY); ctx.lineTo(x, endY); ctx.stroke();
-            }
-            for (let y = Math.floor(startY/gridSize)*gridSize; y < endY; y += gridSize) {
-                ctx.beginPath(); ctx.moveTo(startX, y); ctx.lineTo(endX, y); ctx.stroke();
-            }
-
-            // Parçaları Çiz
-            elements.forEach((el, index) => drawElement2D(el, index === selectedElementIndex));
-
-            // Snap (Otomatik Yakalama) Noktası Göstergesi
-            if (lastEndPoint) {
-                ctx.fillStyle = '#00ff88';
-                ctx.beginPath();
-                ctx.arc(lastEndPoint.x, lastEndPoint.y, 6 / scale, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
+            ctx.beginPath();
+            ctx.arc(canvas2d.width/2, canvas2d.height/2, 40, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(59, 130, 246, 0.3)"; // Mavi vurgu
+            ctx.fill();
+            ctx.strokeStyle = "#3b82f6";
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
+        window.addEventListener('resize', resize2D);
+        resize2D();
 
-        function drawElement2D(el, isSelected) {
-            const baseColor = el.color || '#d4d4d4';
+        // --- 3D Three.js Kurulumu (Örnek Silindir) ---
+        const container3d = document.getElementById('container-3d');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a1a);
 
-            if (el.shape === 'cylinder') {
-                const r = Math.max(el.thickness / 2, 3);
-                ctx.beginPath();
-                ctx.arc(el.x1, el.y1, r, 0, Math.PI * 2);
-                ctx.fillStyle = isSelected ? '#ffeb3b' : baseColor;
-                ctx.fill();
-                ctx.lineWidth = (isSelected ? 3 : 1) / scale;
-                ctx.strokeStyle = isSelected ? '#fff' : '#000';
-                ctx.stroke();
+        const camera = new THREE.PerspectiveCamera(50, container3d.clientWidth / container3d.clientHeight, 0.1, 1000);
+        camera.position.set(100, 100, 100);
 
-                ctx.fillStyle = '#ccc';
-                ctx.font = (11 / scale) + 'px sans-serif';
-                ctx.fillText((el.label || 'Ayak') + ' Y' + el.height + 'cm', el.x1 + (r + 4/scale), el.y1);
-            } else {
-                ctx.beginPath();
-                ctx.moveTo(el.x1, el.y1);
-                ctx.lineTo(el.x2, el.y2);
-                ctx.strokeStyle = isSelected ? '#ffeb3b' : baseColor;
-                ctx.lineWidth = isSelected ? 6 / scale : Math.max(2, el.thickness / 2);
-                ctx.stroke();
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container3d.clientWidth, container3d.clientHeight);
+        container3d.appendChild(renderer.domElement);
 
-                const length = Math.round(Math.hypot(el.x2 - el.x1, el.y2 - el.y1));
-                const midX = (el.x1 + el.x2) / 2;
-                const midY = (el.y1 + el.y2) / 2;
-                ctx.fillStyle = '#aaa';
-                ctx.font = (12 / scale) + 'px sans-serif';
-                const labelPrefix = el.label ? el.label + ' • ' : '';
-                ctx.fillText(labelPrefix + length + 'cm', midX + (5/scale), midY - (5/scale));
-            }
-        }
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
 
-        // --- Panel İşlemleri (Tüm Değerler Düzenlenebilir) ---
-        function applyTemplate() {
-            const key = document.getElementById('elem-template').value;
-            if (!key || !PRESETS[key]) return;
-            const p = PRESETS[key];
-            document.getElementById('elem-shape').value = p.shape;
-            document.getElementById('elem-thickness').value = p.thickness;
-            document.getElementById('elem-height').value = p.height;
-            document.getElementById('elem-elevation').value = p.elevation;
-            document.getElementById('elem-color').value = p.color;
-            const labelInput = document.getElementById('elem-label');
-            if (!labelInput.value) labelInput.value = p.label;
-            toggleShapeFields();
-        }
+        // Işıklar
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(50, 100, 50);
+        scene.add(dirLight);
 
-        function toggleShapeFields() {
-            const shape = document.getElementById('elem-shape').value;
-            const isCyl = shape === 'cylinder';
-            document.getElementById('group-length').style.display = isCyl ? 'none' : 'block';
-            document.getElementById('group-angle').style.display = isCyl ? 'none' : 'block';
-            document.getElementById('thickness-label').innerText = isCyl ? 'Çap (cm)' : 'Kalınlık / Genişlik (cm)';
-            if (!isCyl) {
-                const lenInput = document.getElementById('elem-length');
-                if (!lenInput.value || parseFloat(lenInput.value) <= 0) lenInput.value = lastUsedLength || 200;
-            }
-        }
+        // Zemin Grid'i
+        scene.add(new THREE.GridHelper(200, 20, 0x444444, 0x222222));
 
-        function openPropertyPanelForNew() {
-            selectedElementIndex = null;
-            document.getElementById('panel-title').innerText = "Yeni Parça Ekle";
-            document.getElementById('btn-delete').style.display = 'none';
-
-            document.getElementById('elem-template').value = '';
-            document.getElementById('elem-shape').value = lastUsedShape;
-            document.getElementById('elem-length').value = lastUsedLength;
-            document.getElementById('elem-angle').value = '0';
-            document.getElementById('elem-thickness').value = lastUsedThickness;
-            document.getElementById('elem-height').value = lastUsedHeight;
-            document.getElementById('elem-elevation').value = lastUsedElevation;
-            document.getElementById('elem-color').value = lastUsedColor;
-            document.getElementById('elem-label').value = '';
-
-            toggleShapeFields();
-            document.getElementById('property-panel').style.display = 'block';
-        }
-
-        function openPropertyPanelForEdit(index) {
-            selectedElementIndex = index;
-            const el = elements[index];
-            document.getElementById('panel-title').innerText = "Parçayı Düzenle";
-            document.getElementById('btn-delete').style.display = 'block';
-
-            const length = Math.round(Math.hypot(el.x2 - el.x1, el.y2 - el.y1));
-            let angleDeg = Math.round((Math.atan2(el.y2 - el.y1, el.x2 - el.x1) * 180) / Math.PI);
-            if (angleDeg < 0) angleDeg += 360;
-
-            document.getElementById('elem-template').value = '';
-            document.getElementById('elem-shape').value = el.shape || 'box';
-            document.getElementById('elem-length').value = length || 200;
-            document.getElementById('elem-angle').value = angleDeg;
-            document.getElementById('elem-thickness').value = el.thickness;
-            document.getElementById('elem-height').value = el.height;
-            document.getElementById('elem-elevation').value = el.elevation;
-            document.getElementById('elem-color').value = el.color || '#8a94a6';
-            document.getElementById('elem-label').value = el.label || '';
-
-            toggleShapeFields();
-            document.getElementById('property-panel').style.display = 'block';
-        }
-
-        function cancelElement() {
-            document.getElementById('property-panel').style.display = 'none';
-            startPoint = null;
-            selectedElementIndex = null;
-            draw2D();
-        }
-
-        function saveElement() {
-            const shape = document.getElementById('elem-shape').value;
-            let lengthCm = parseFloat(document.getElementById('elem-length').value) || 0;
-            const angleDeg = parseFloat(document.getElementById('elem-angle').value) || 0;
-            if (shape === 'cylinder') lengthCm = 0;
-            else if (lengthCm <= 0) lengthCm = 200;
-
-            const thickness = parseFloat(document.getElementById('elem-thickness').value) || 10;
-            const height = parseFloat(document.getElementById('elem-height').value) || 10;
-            const elevation = parseFloat(document.getElementById('elem-elevation').value) || 0;
-            const color = document.getElementById('elem-color').value || '#8a94a6';
-            const label = document.getElementById('elem-label').value.trim();
-            const angleRad = (angleDeg * Math.PI) / 180;
-
-            lastUsedShape = shape;
-            lastUsedThickness = thickness;
-            lastUsedHeight = height;
-            lastUsedElevation = elevation;
-            lastUsedColor = color;
-            if (shape === 'box') lastUsedLength = lengthCm;
-
-            if (selectedElementIndex !== null) {
-                const el = elements[selectedElementIndex];
-                el.shape = shape;
-                el.thickness = thickness;
-                el.height = height;
-                el.elevation = elevation;
-                el.color = color;
-                el.label = label;
-                el.x2 = el.x1 + Math.cos(angleRad) * lengthCm;
-                el.y2 = el.y1 + Math.sin(angleRad) * lengthCm;
-                lastEndPoint = shape === 'box' ? { x: el.x2, y: el.y2 } : null;
-            } else if (startPoint) {
-                const x2 = startPoint.x + Math.cos(angleRad) * lengthCm;
-                const y2 = startPoint.y + Math.sin(angleRad) * lengthCm;
-
-                elements.push({
-                    x1: startPoint.x, y1: startPoint.y,
-                    x2: x2, y2: y2,
-                    shape: shape, thickness: thickness, height: height,
-                    elevation: elevation, color: color, label: label
-                });
-                lastEndPoint = shape === 'box' ? { x: x2, y: y2 } : null;
-            }
-
-            document.getElementById('property-panel').style.display = 'none';
-            startPoint = null;
-            selectedElementIndex = null;
-            draw2D();
-            refreshPartsList();
-        }
-
-        function deleteSelectedElement() {
-            if (selectedElementIndex !== null) {
-                elements.splice(selectedElementIndex, 1);
-                selectedElementIndex = null;
-                document.getElementById('property-panel').style.display = 'none';
-                draw2D();
-                refreshPartsList();
-            }
-        }
-
-        // --- Parçalar Yan Paneli ---
-        function togglePartsPanel() {
-            document.getElementById('parts-panel').classList.toggle('open');
-        }
-
-        function refreshPartsList() {
-            document.getElementById('parts-count').innerText = elements.length;
-            document.getElementById('parts-count-badge').innerText = elements.length;
-            const list = document.getElementById('parts-list');
-
-            if (elements.length === 0) {
-                list.innerHTML = '<p style="padding:20px;color:#888;font-size:12px;">Henüz parça eklenmedi. "Çiz" modunda ekrana dokunarak başla.</p>';
-                return;
-            }
-
-            list.innerHTML = elements.map((el, i) => {
-                const name = el.label || (el.shape === 'cylinder' ? 'Silindir' : 'Kutu');
-                const dims = el.shape === 'cylinder'
-                    ? `Ø${el.thickness}cm × Y${el.height}cm`
-                    : `${Math.round(Math.hypot(el.x2 - el.x1, el.y2 - el.y1))}cm × Y${el.height}cm`;
-                return `<div class="part-row" style="border-left:4px solid ${el.color}">
-                    <div class="part-info" onclick="selectAndEdit(${i})">
-                        <b>${escapeHtml(name)}</b><br>
-                        <span style="color:#999;">${dims} · taban ${el.elevation}cm</span>
-                    </div>
-                    <div class="part-actions">
-                        <button onclick="duplicateElement(${i})" title="Kopyala">⧉</button>
-                        <button onclick="deleteElementAt(${i})" title="Sil">🗑</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.innerText = str;
-            return div.innerHTML;
-        }
-
-        function selectAndEdit(i) {
-            openPropertyPanelForEdit(i);
-        }
-
-        function deleteElementAt(i) {
-            elements.splice(i, 1);
-            if (selectedElementIndex === i) selectedElementIndex = null;
-            draw2D();
-            refreshPartsList();
-            if (currentTab === '3d') update3DScene();
-        }
-
-        function duplicateElement(i) {
-            const src = elements[i];
-            const copy = JSON.parse(JSON.stringify(src));
-            const offset = 20;
-            copy.x1 += offset; copy.y1 += offset;
-            copy.x2 += offset; copy.y2 += offset;
-            copy.label = copy.label ? copy.label + ' (kopya)' : '';
-            elements.push(copy);
-            draw2D();
-            refreshPartsList();
-            if (currentTab === '3d') update3DScene();
-        }
-
-        // --- Proje İşlemleri (Yeni / Dışa-İçe Aktar) ---
-        function renameProject() {
-            projectName = document.getElementById('project-name').value || 'Yeni Tasarım';
-        }
-
-        function newProject() {
-            if (elements.length > 0 && !confirm('Mevcut tasarım silinecek. Emin misin?')) return;
-            elements = [];
-            selectedElementIndex = null;
-            startPoint = null;
-            lastEndPoint = null;
-            projectName = 'Yeni Tasarım';
-            document.getElementById('project-name').value = projectName;
-            draw2D();
-            refreshPartsList();
-            if (currentTab === '3d') update3DScene();
-        }
-
-        function exportProject() {
-            const data = JSON.stringify({ name: projectName, elements: elements }, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const safeName = (projectName || 'tasarim').replace(/[^a-zA-Z0-9ığüşöçİĞÜŞÖÇ_-]+/g, '_');
-            a.href = url;
-            a.download = (safeName || 'tasarim') + '.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function importProject(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    let els = null;
-                    if (Array.isArray(data)) els = data;
-                    else if (data && Array.isArray(data.elements)) els = data.elements;
-
-                    if (!els) { alert('Geçersiz dosya formatı.'); return; }
-
-                    elements = els.map(el => ({
-                        x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2,
-                        shape: el.shape === 'cylinder' ? 'cylinder' : 'box',
-                        thickness: el.thickness || 10,
-                        height: el.height || 10,
-                        elevation: el.elevation || 0,
-                        color: el.color || '#8a94a6',
-                        label: el.label || ''
-                    }));
-
-                    if (data && data.name) {
-                        projectName = data.name;
-                        document.getElementById('project-name').value = projectName;
-                    }
-
-                    selectedElementIndex = null;
-                    startPoint = null;
-                    lastEndPoint = null;
-                    draw2D();
-                    refreshPartsList();
-                    fitToScreen();
-                    if (currentTab === '3d') update3DScene();
-                } catch (err) {
-                    alert('Dosya okunamadı: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
-            input.value = '';
-        }
-
-        // --- 3D Three.js Motoru ---
-        let scene, camera, renderer, controls;
-        let wireframeMode = false;
-
-        function init3D() {
-            const container = document.getElementById('canvas3d-container');
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x181818);
-
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 5000);
-            camera.position.set(400, 400, 400);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            container.appendChild(renderer.domElement);
-
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.maxPolarAngle = Math.PI * 0.49; // zeminin altına geçmeyi engelle
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
-            scene.add(ambientLight);
-
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-            dirLight.position.set(300, 600, 400);
-            dirLight.castShadow = true;
-            dirLight.shadow.mapSize.width = 2048;
-            dirLight.shadow.mapSize.height = 2048;
-            dirLight.shadow.camera.left = -800;
-            dirLight.shadow.camera.right = 800;
-            dirLight.shadow.camera.top = 800;
-            dirLight.shadow.camera.bottom = -800;
-            dirLight.shadow.camera.near = 10;
-            dirLight.shadow.camera.far = 2500;
-            scene.add(dirLight);
-
-            const gridHelper = new THREE.GridHelper(2000, 50, 0x444444, 0x2a2a2a);
-            gridHelper.position.y = 0.1;
-            scene.add(gridHelper);
-
-            // Gölgeleri yakalayan zemin
-            const groundGeo = new THREE.PlaneGeometry(4000, 4000);
-            const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.name = 'groundPlane';
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            scene.add(ground);
-
-            animate3D();
-        }
+        // Örnek Seçili Parça (Silindir / Ön Ayak)
+        const geometry = new THREE.CylinderGeometry(15, 15, 60, 32);
+        const material = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4 });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.y = 30; // Yüksekliğin yarısı (zemine oturtmak için)
+        scene.add(mesh);
 
         function animate3D() {
             requestAnimationFrame(animate3D);
             controls.update();
             renderer.render(scene, camera);
         }
+        animate3D();
 
-        function setView(view) {
-            if (!camera || !controls) return;
-            const t = controls.target;
-            if (view === 'top') camera.position.set(t.x, 900, t.z + 1);
-            else if (view === 'front') camera.position.set(t.x, t.y + 150, t.z + 650);
-            else if (view === 'side') camera.position.set(t.x + 650, t.y + 150, t.z);
-            else camera.position.set(t.x + 450, t.y + 400, t.z + 450); // izometrik
-            camera.lookAt(t);
-            controls.update();
-        }
-
-        function toggleWireframe() {
-            wireframeMode = !wireframeMode;
-            document.getElementById('btn-wireframe').classList.toggle('active-tool', wireframeMode);
-            update3DScene();
-        }
-
-        function update3DScene() {
-            const removeList = [];
-            scene.children.forEach(child => {
-                if (child.isMesh && child.name !== 'groundPlane') removeList.push(child);
-            });
-            removeList.forEach(c => scene.remove(c));
-
-            if (elements.length === 0) return;
-
-            // Yapının geometrik merkezini bularak 3D sahneyi otomatik ortalama
-            let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-            elements.forEach(el => {
-                minX = Math.min(minX, el.x1, el.x2);
-                maxX = Math.max(maxX, el.x1, el.x2);
-                minZ = Math.min(minZ, el.y1, el.y2);
-                maxZ = Math.max(maxZ, el.y1, el.y2);
-            });
-            const centerX = (minX + maxX) / 2;
-            const centerZ = (minZ + maxZ) / 2;
-
-            elements.forEach(el => {
-                const x1 = el.x1 - centerX, z1 = el.y1 - centerZ;
-                const x2 = el.x2 - centerX, z2 = el.y2 - centerZ;
-
-                const height = el.height || 10;
-                const elevation = el.elevation || 0;
-                const thickness = el.thickness || 10;
-                const color = el.color || '#999999';
-
-                let mesh;
-                if (el.shape === 'cylinder') {
-                    const geometry = new THREE.CylinderGeometry(thickness / 2, thickness / 2, height, 20);
-                    const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.55, wireframe: wireframeMode });
-                    mesh = new THREE.Mesh(geometry, material);
-                    mesh.position.set(x1, elevation + height / 2, z1);
-                } else {
-                    const length = Math.hypot(x2 - x1, z2 - z1);
-                    if (length === 0) return;
-                    const angle = Math.atan2(z2 - z1, x2 - x1);
-                    const geometry = new THREE.BoxGeometry(length, height, thickness);
-                    const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.55, wireframe: wireframeMode });
-                    mesh = new THREE.Mesh(geometry, material);
-                    mesh.position.set((x1 + x2) / 2, elevation + height / 2, (z1 + z2) / 2);
-                    mesh.rotation.y = -angle;
-                }
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                scene.add(mesh);
-            });
-
-            const container = document.getElementById('canvas3d-container');
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            camera.aspect = container.clientWidth / container.clientHeight;
+        // 3D Ekranı yeniden boyutlandırma
+        window.addEventListener('resize', () => {
+            camera.aspect = container3d.clientWidth / container3d.clientHeight;
             camera.updateProjectionMatrix();
-        }
+            renderer.setSize(container3d.clientWidth, container3d.clientHeight);
+        });
     </script>
 </body>
 </html>
