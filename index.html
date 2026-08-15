@@ -3,228 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Arctica 3D Tasarım Aracı - Full Sürüm</title>
-    <!-- Three.js ve OrbitControls CDN -->
+    <title>Arctica 3D Tasarım - Pro V3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
     <style>
-        /* --- Tema ve Renkler --- */
         :root {
-            --bg-main: #18181b;
-            --bg-panel: #27272a;
-            --bg-topbar: #202024;
-            --text-main: #e4e4e7;
-            --text-muted: #a1a1aa;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --border: #3f3f46;
-            --success: #10b981;
-            --danger: #ef4444;
+            --bg-main: #18181b; --bg-panel: #27272a; --bg-topbar: #202024;
+            --text-main: #e4e4e7; --text-muted: #a1a1aa;
+            --accent: #3b82f6; --border: #3f3f46;
+            --success: #10b981; --danger: #ef4444; --warning: #eab308;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: manipulation; }
-        
-        body { 
-            display: flex; 
-            flex-direction: column;
-            height: 100vh; 
-            background-color: var(--bg-main); 
-            color: var(--text-main); 
-            overflow: hidden; 
-        }
-
-        /* --- Üst Bar (Topbar) --- */
-        .topbar {
-            height: 60px;
-            background-color: var(--bg-topbar);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            z-index: 20;
-            flex-shrink: 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; touch-action: manipulation; }
+        body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-main); color: var(--text-main); overflow: hidden; }
+        .topbar { height: 60px; background-color: var(--bg-topbar); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 20; }
         .brand { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 10px; }
         .menu-toggle { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-        
-        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn {
-            background-color: var(--bg-panel); color: var(--text-main);
-            border: 1px solid var(--border); padding: 8px 12px;
-            border-radius: 6px; cursor: pointer; font-size: 13px;
-            transition: all 0.2s; display: flex; align-items: center; gap: 5px;
-        }
+        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .btn { background-color: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
         .btn:hover { background-color: var(--border); }
         .btn.active-tool { background-color: var(--accent); border-color: var(--accent); color: white; }
-        .btn.primary { background-color: var(--success); border-color: var(--success); }
-        .btn.danger { background-color: var(--danger); border-color: var(--danger); }
-
-        /* --- Ana Kapsayıcı --- */
-        .main-container {
-            flex: 1;
-            display: flex;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* --- Sol Panel --- */
-        .sidebar {
-            width: 300px;
-            background-color: var(--bg-panel);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            transition: transform 0.3s ease;
-            z-index: 15;
-            height: 100%;
-        }
-
-        .sidebar-section {
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-            overflow-y: auto;
-        }
+        
+        /* Checkbox buton stili */
+        .toolbar-check { display: flex; align-items: center; gap: 5px; background-color: var(--bg-main); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; cursor: pointer; }
+        
+        .main-container { flex: 1; display: flex; position: relative; overflow: hidden; }
+        .sidebar { width: 340px; background-color: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 15; height: 100%; transition: transform 0.3s; }
+        .sidebar-section { padding: 15px; border-bottom: 1px solid var(--border); overflow-y: auto; }
         .sidebar-section.flex-fill { flex: 1; }
-
-        .sidebar h3 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-
-        .form-group { margin-bottom: 12px; }
+        .sidebar h3 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+        .form-group { margin-bottom: 10px; }
         .form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-        .form-group input, .form-group select {
-            width: 100%; padding: 8px; background-color: var(--bg-main);
-            border: 1px solid var(--border); color: var(--text-main);
-            border-radius: 4px; font-size: 13px; outline: none;
-        }
-        .form-group input[type="color"] { height: 35px; padding: 2px; cursor: pointer; }
-        .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
-
-        .tree-item {
-            font-size: 13px; padding: 6px 8px; cursor: pointer; 
-            border-radius: 4px; margin-bottom: 4px; border-left: 3px solid transparent;
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        .form-group input[type="number"], .form-group select { width: 100%; padding: 6px; background-color: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); border-radius: 4px; font-size: 12px; outline: none; }
+        .form-group input[type="color"] { height: 32px; padding: 2px; cursor: pointer; width: 100%; }
+        .checkbox-group { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-main); cursor: pointer; }
+        
+        .tree-item { font-size: 13px; padding: 6px 8px; cursor: pointer; border-radius: 4px; margin-bottom: 4px; border-left: 3px solid transparent; display: flex; justify-content: space-between; align-items: center; }
         .tree-item:hover { background: rgba(255,255,255,0.05); }
         .tree-item.selected { background: rgba(59, 130, 246, 0.2); border-left-color: var(--accent); }
-        .del-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; display: none; }
+        .del-btn { background: none; border: none; color: var(--danger); cursor: pointer; display: none; }
         .tree-item:hover .del-btn { display: block; }
-
-        /* --- Çalışma Alanı (Workspace) --- */
-        .workspace {
-            flex: 1;
-            display: flex;
-            position: relative;
-            background: #111;
-        }
-
-        .view-pane {
-            flex: 1;
-            position: relative;
-            border-right: 1px solid var(--border);
-        }
-
-        /* 2D Grid Arka Planı */
-        #pane-2d {
-            background-color: #f8fafc;
-            background-image: linear-gradient(#e2e8f0 1px, transparent 1px), linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-
-        canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
         
-        .view-title {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(0,0,0,0.7); color: white;
-            padding: 4px 8px; border-radius: 4px; font-size: 11px; z-index: 5; pointer-events: none;
-        }
+        .workspace { flex: 1; display: flex; flex-direction: row; background: #111; }
+        .view-pane { flex: 1; position: relative; border-right: 1px solid var(--border); }
+        #pane-2d { background-color: #f8fafc; background-image: linear-gradient(#e2e8f0 1px, transparent 1px), linear-gradient(90deg, #e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
+        canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+        .view-title { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; pointer-events: none; z-index: 5;}
         #pane-2d .view-title { background: rgba(255,255,255,0.9); color: #333; border: 1px solid #ccc; font-weight: bold; }
-
-        /* Mobil Sekmeler (Sadece Mobilde Görünür) */
         .mobile-tabs { display: none; background: var(--bg-topbar); width: 100%; }
         .mobile-tab-btn { flex: 1; padding: 10px; background: none; border: none; color: var(--text-muted); border-bottom: 2px solid transparent; font-weight: bold; }
         .mobile-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-        /* Overlay */
-        .sidebar-overlay { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 14; }
-
-        /* --- Mobil Uyumluluk (Responsive) --- */
+        .sidebar-overlay { display: none; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index: 14; }
+        .flex-row { display: flex; gap: 6px; align-items: center; }
+        
         @media (max-width: 850px) {
             .menu-toggle { display: block; }
-            .sidebar { position: absolute; left: -300px; }
+            .sidebar { position: absolute; left: -340px; }
             .sidebar.open { left: 0; }
             .sidebar-overlay.open { display: block; }
-            
-            /* Mobilde ekranı ikiye bölmek yerine sekmeli yap */
             .workspace { flex-direction: column; }
             .mobile-tabs { display: flex; }
-            
             .view-pane { display: none; width: 100%; flex: 1; border-right: none; }
             .view-pane.active { display: block; }
-            
-            .toolbar { gap: 4px; }
-            .btn { padding: 6px 8px; font-size: 12px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Üst Bar -->
     <header class="topbar">
-        <div class="brand">
-            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-            <span style="color: var(--accent);">▲ Arctica</span>
-        </div>
+        <div class="brand"><button class="menu-toggle" onclick="toggleSidebar()">☰</button><span style="color: var(--accent);">▲ Arctica</span></div>
         <div class="toolbar">
-            <button class="btn active-tool" id="btn-draw" onclick="setMode('draw')">✏️ Çiz</button>
-            <button class="btn" id="btn-select" onclick="setMode('select')">👆 Seç</button>
+            <button class="btn active-tool" id="btn-draw" onclick="setMode('draw')">✏️ Çiz / Ekle</button>
+            <label class="toolbar-check" title="Klavyeden Shift'e basarak da kullanabilirsin.">
+                <input type="checkbox" id="ortho-mode"> 📏 Düz Çiz (Shift)
+            </label>
+            <div style="width:1px; background:var(--border); margin:0 2px;"></div>
+            <button class="btn" id="btn-select" onclick="setMode('select')">👆 Seç & Düzenle</button>
             <button class="btn" id="btn-pan" onclick="setMode('pan')">✋ Kaydır</button>
             <div style="width:1px; background:var(--border); margin:0 2px;"></div>
             <button class="btn" onclick="clearAll()">🗑 Temizle</button>
         </div>
     </header>
 
-    <!-- Mobil İçin Sekmeler -->
     <div class="mobile-tabs">
         <button class="mobile-tab-btn active" onclick="switchMobileView('2d')">2D Çizim</button>
         <button class="mobile-tab-btn" onclick="switchMobileView('3d')">3D Görünüm</button>
     </div>
 
-    <!-- Ana Çalışma Alanı -->
     <div class="main-container">
-        
-        <!-- Sidebar Overlay (Mobilde menü açıkken arkaplanı karartır) -->
         <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-        <!-- Sol Panel (Özellikler ve Ağaç) -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-section">
-                <h3>Özellikler & Çizim Ayarları</h3>
+                <h3>Ayarlar & Pozisyon</h3>
                 
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <div class="form-group" style="flex:1;">
+                        <label style="color:var(--accent); font-weight:bold;">Uzunluk (cm)</label>
+                        <input type="number" id="prop-length" value="10" onchange="updateSelected()">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label style="color:var(--accent); font-weight:bold;">Duruş Açısı (°)</label>
+                        <input type="number" id="prop-angle-pos" value="0" step="5" onchange="updateSelected()">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>Şekil Tipi</label>
                     <select id="prop-shape" onchange="updateSelected()">
-                        <option value="box">Kutu / Plaka</option>
+                        <option value="box">Kutu / Panel / Ayak</option>
                         <option value="cylinder">Silindir / Direk</option>
                     </select>
                 </div>
-
+                
                 <div style="display: flex; gap: 8px;">
                     <div class="form-group" style="flex:1;">
                         <label id="lbl-thickness">Kalınlık (cm)</label>
-                        <input type="number" id="prop-thickness" value="10" onchange="updateSelected()">
+                        <input type="number" id="prop-thickness" value="5" onchange="updateSelected()">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>Yükseklik (cm)</label>
-                        <input type="number" id="prop-height" value="50" onchange="updateSelected()">
+                        <input type="number" id="prop-height" value="40" onchange="updateSelected()">
                     </div>
                 </div>
-
                 <div style="display: flex; gap: 8px;">
                     <div class="form-group" style="flex:1;">
-                        <label>Kot (Zemin Mesafesi)</label>
+                        <label>Kot (Zeminden Yük.)</label>
                         <input type="number" id="prop-elevation" value="0" onchange="updateSelected()">
                     </div>
                     <div class="form-group" style="flex:1;">
@@ -232,26 +135,48 @@
                         <input type="color" id="prop-color" value="#8a94a6" onchange="updateSelected()">
                     </div>
                 </div>
-                <p style="font-size:11px; color:var(--text-muted);">*Çizim modundayken yeni parçalar bu ayarlarla eklenir. Seçili parça varsa anında güncellenir.</p>
-            </div>
-
-            <div class="sidebar-section flex-fill">
-                <h3>Tasarım Ağacı (Parçalar)</h3>
-                <div id="tree-list">
-                    <p style="font-size:12px; color:#666;">Henüz parça yok. 2D alanda çizime başla.</p>
+                
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+                
+                <h3>Kesim & Açılar</h3>
+                <div class="form-group">
+                    <label>Başlangıç Kesimi</label>
+                    <div class="flex-row">
+                        <input type="number" id="prop-a1" value="0" step="5" onchange="updateSelected()" style="width: 60px;">
+                        <span style="font-size: 12px;">°</span>
+                        <select id="prop-ax1" onchange="updateSelected()" style="flex: 1;">
+                            <option value="h">Yan (Köşe)</option>
+                            <option value="v">Üst (Eğim)</option>
+                        </select>
+                        <label class="checkbox-group"><input type="checkbox" id="prop-a1-inv" onchange="updateSelected()"> Ters</label>
+                    </div>
                 </div>
+                
+                <div class="form-group">
+                    <label>Bitiş Kesimi</label>
+                    <div class="flex-row">
+                        <input type="number" id="prop-a2" value="0" step="5" onchange="updateSelected()" style="width: 60px;">
+                        <span style="font-size: 12px;">°</span>
+                        <select id="prop-ax2" onchange="updateSelected()" style="flex: 1;">
+                            <option value="h">Yan (Köşe)</option>
+                            <option value="v">Üst (Eğim)</option>
+                        </select>
+                        <label class="checkbox-group"><input type="checkbox" id="prop-a2-inv" onchange="updateSelected()"> Ters</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-section flex-fill">
+                <h3>Tasarım Ağacı</h3>
+                <div id="tree-list"><p style="font-size:12px; color:#666;">Henüz parça yok.</p></div>
             </div>
         </aside>
 
-        <!-- Çizim ve 3D Alanları -->
         <div class="workspace">
-            <!-- 2D View -->
             <div class="view-pane active" id="pane-2d">
                 <div class="view-title">2D Teknik (Üstten Görünüm)</div>
                 <canvas id="canvas2d"></canvas>
             </div>
-
-            <!-- 3D View -->
             <div class="view-pane active" id="pane-3d">
                 <div class="view-title">3D Perspektif</div>
                 <div id="canvas3d-container" style="width:100%; height:100%;"></div>
@@ -259,31 +184,21 @@
         </div>
     </div>
 
-    <!-- JavaScript Uygulama Mantığı -->
     <script>
-        // --- Durum Değişkenleri ---
-        let mode = 'draw'; // draw, select, pan
+        let mode = 'draw';
         let elements = [];
         let selectedIndex = null;
         
-        // 2D Kamera
-        let scale = 1;
-        let offsetX = 0;
-        let offsetY = 0;
-        let isPanning = false;
-        let isDragging = false;
-        let panStart = { x: 0, y: 0 };
-        let offsetStart = { x: 0, y: 0 };
-        let dragStart = { x: 0, y: 0 };
-        
-        // Çizim Durumu
+        let scale = 1, offsetX = 0, offsetY = 0;
+        let isPanning = false, isDragging = false;
+        let panStart = {x:0, y:0}, offsetStart = {x:0, y:0}, dragStart = {x:0, y:0};
         let drawStartPt = null;
+        let currentSnap = null; 
+        let currentMousePos = {x:0, y:0};
 
-        // UI Elementleri
         const canvas2d = document.getElementById('canvas2d');
         const ctx = canvas2d.getContext('2d');
         
-        // --- Responsive & Mobil UI ---
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.querySelector('.sidebar-overlay').classList.toggle('open');
@@ -292,7 +207,6 @@
         function switchMobileView(view) {
             document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
-            
             if(view === '2d') {
                 document.querySelectorAll('.mobile-tab-btn')[0].classList.add('active');
                 document.getElementById('pane-2d').classList.add('active');
@@ -304,21 +218,19 @@
             }
         }
 
-        // --- Mod Değişimi ---
         function setMode(newMode) {
             mode = newMode;
             document.getElementById('btn-draw').classList.toggle('active-tool', mode === 'draw');
             document.getElementById('btn-select').classList.toggle('active-tool', mode === 'select');
             document.getElementById('btn-pan').classList.toggle('active-tool', mode === 'pan');
-            drawStartPt = null;
+            drawStartPt = null; 
+            if(mode !== 'select') { selectedIndex = null; fillPropertiesPanel(null); }
             draw2D();
         }
 
-        // --- 2D Çizim Motoru ---
         function resize2D() {
-            const container = document.getElementById('pane-2d');
-            canvas2d.width = container.clientWidth;
-            canvas2d.height = container.clientHeight;
+            canvas2d.width = document.getElementById('pane-2d').clientWidth;
+            canvas2d.height = document.getElementById('pane-2d').clientHeight;
             draw2D();
         }
         window.addEventListener('resize', () => { resize2D(); resize3D(); });
@@ -327,142 +239,144 @@
             const rect = canvas2d.getBoundingClientRect();
             let cx = e.touches ? e.touches[0].clientX : e.clientX;
             let cy = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                rawX: cx, rawY: cy,
-                x: (cx - rect.left - offsetX) / scale,
-                y: (cy - rect.top - offsetY) / scale
-            };
+            return { rawX: cx, rawY: cy, x: (cx - rect.left - offsetX) / scale, y: (cy - rect.top - offsetY) / scale };
         }
 
-        // Etkileşimler
+        function findSnap(pos) {
+            let closestDist = 25 / scale;
+            let snapPt = null;
+            elements.forEach((el, i) => {
+                if (isDragging && i === selectedIndex) return; 
+                const pts = [ { x: el.x1, y: el.y1, type: 'end' }, { x: el.x2, y: el.y2, type: 'end' }, { x: (el.x1+el.x2)/2, y: (el.y1+el.y2)/2, type: 'mid' } ];
+                pts.forEach(p => {
+                    const d = Math.hypot(p.x - pos.x, p.y - pos.y);
+                    if (d < closestDist) {
+                        closestDist = d;
+                        snapPt = { x: p.x, y: p.y, elevation: el.elevation + el.height }; 
+                    }
+                });
+            });
+            return snapPt;
+        }
+
         function handleStart(e) {
             if (e.target !== canvas2d) return;
             const pos = getLogicalPos(e);
+            const effPos = currentSnap ? {x: currentSnap.x, y: currentSnap.y} : pos;
 
             if (mode === 'pan') {
-                isPanning = true;
-                panStart = { x: pos.rawX, y: pos.rawY };
-                offsetStart = { x: offsetX, y: offsetY };
+                isPanning = true; panStart = {x: pos.rawX, y: pos.rawY}; offsetStart = {x: offsetX, y: offsetY};
                 canvas2d.style.cursor = 'grabbing';
             } 
             else if (mode === 'select') {
                 selectedIndex = findElementAt(pos.x, pos.y);
                 if (selectedIndex !== null) {
-                    isDragging = true;
-                    dragStart = { x: pos.x, y: pos.y };
+                    isDragging = true; dragStart = {x: pos.x, y: pos.y};
                     fillPropertiesPanel(selectedIndex);
-                } else {
-                    fillPropertiesPanel(null); // seçimi kaldır
-                }
-                updateTreeUI();
-                draw2D();
+                } else { fillPropertiesPanel(null); }
+                updateTreeUI(); draw2D();
             }
             else if (mode === 'draw') {
-                // Şekil silindirse tek tıkla ekle, kutu ise sürükle bırak
-                const shape = document.getElementById('prop-shape').value;
-                if(shape === 'cylinder') {
-                    addElement(pos.x, pos.y, pos.x, pos.y);
-                } else {
-                    drawStartPt = { x: pos.x, y: pos.y };
-                }
+                drawStartPt = { x: effPos.x, y: effPos.y };
             }
-            // Sadece canvas içindeyken scrollu engelle
-            if(e.cancelable) e.preventDefault(); 
+            if(e.cancelable) e.preventDefault();
         }
 
         function handleMove(e) {
+            if (e.target !== canvas2d) return;
+            let pos = getLogicalPos(e);
+            
+            // Düz Çizgi (Ortho) Kontrolü (Shift veya Checkbox)
+            const isOrtho = e.shiftKey || document.getElementById('ortho-mode').checked;
+            
+            if(mode === 'draw' || isDragging) currentSnap = findSnap(pos);
+            else currentSnap = null;
+
             if (isPanning) {
-                const pos = getLogicalPos(e);
                 offsetX = offsetStart.x + (pos.rawX - panStart.x);
                 offsetY = offsetStart.y + (pos.rawY - panStart.y);
                 draw2D();
             } 
             else if (isDragging && selectedIndex !== null) {
-                const pos = getLogicalPos(e);
                 const el = elements[selectedIndex];
-                const dx = pos.x - dragStart.x;
-                const dy = pos.y - dragStart.y;
-                el.x1 += dx; el.y1 += dy;
-                el.x2 += dx; el.y2 += dy;
-                dragStart = { x: pos.x, y: pos.y };
-                draw2D();
-                update3DScene();
+                const effPos = currentSnap ? currentSnap : pos;
+                const dx = effPos.x - dragStart.x;
+                const dy = effPos.y - dragStart.y;
+                el.x1 += dx; el.y1 += dy; el.x2 += dx; el.y2 += dy;
+                dragStart = { x: effPos.x, y: effPos.y };
+                draw2D(); update3DScene();
             }
-            else if (mode === 'draw' && drawStartPt) {
-                const pos = getLogicalPos(e);
-                draw2D(); // Mevcutları çiz
-                
-                // Önizleme Çizgisi
-                ctx.save();
-                ctx.translate(offsetX, offsetY);
-                ctx.scale(scale, scale);
-                ctx.beginPath();
-                ctx.moveTo(drawStartPt.x, drawStartPt.y);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.strokeStyle = '#3b82f6';
-                ctx.lineWidth = 2/scale;
-                ctx.stroke();
-                ctx.restore();
+            else {
+                if (mode === 'draw' && drawStartPt) {
+                    if (isOrtho && !currentSnap) {
+                        const dx = pos.x - drawStartPt.x;
+                        const dy = pos.y - drawStartPt.y;
+                        const angle = Math.atan2(dy, dx);
+                        const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4); // 45 derecelik açılara kenetle
+                        const dist = Math.hypot(dx, dy);
+                        pos = {
+                            x: drawStartPt.x + dist * Math.cos(snappedAngle),
+                            y: drawStartPt.y + dist * Math.sin(snappedAngle)
+                        };
+                    }
+                    if(currentSnap) document.getElementById('prop-elevation').value = currentSnap.elevation;
+                }
+                currentMousePos = pos;
+                draw2D(); 
             }
         }
 
         function handleEnd(e) {
-            isPanning = false;
-            canvas2d.style.cursor = 'crosshair';
-            
-            if (isDragging) {
-                isDragging = false;
-            }
+            isPanning = false; isDragging = false; canvas2d.style.cursor = 'crosshair';
             
             if (mode === 'draw' && drawStartPt) {
-                const pos = getLogicalPos(e.changedTouches ? e.changedTouches[0] : e);
-                // Eğer çok kısa çizildiyse iptal et (yanlış tıklama)
-                const dist = Math.hypot(pos.x - drawStartPt.x, pos.y - drawStartPt.y);
-                if (dist > 10) {
-                    addElement(drawStartPt.x, drawStartPt.y, pos.x, pos.y);
+                const endPos = currentSnap ? currentSnap : currentMousePos;
+                const dist = Math.hypot(endPos.x - drawStartPt.x, endPos.y - drawStartPt.y);
+                const thickness = parseFloat(document.getElementById('prop-thickness').value) || 10;
+                
+                if (dist < 5) {
+                    if (document.getElementById('prop-shape').value === 'cylinder') addElement(drawStartPt.x, drawStartPt.y, drawStartPt.x, drawStartPt.y);
+                    else addElement(drawStartPt.x, drawStartPt.y, drawStartPt.x + thickness, drawStartPt.y);
+                } else {
+                    addElement(drawStartPt.x, drawStartPt.y, endPos.x, endPos.y);
                 }
-                drawStartPt = null;
+                drawStartPt = null; currentSnap = null;
                 draw2D();
             }
         }
 
-        canvas2d.addEventListener('mousedown', handleStart);
-        canvas2d.addEventListener('mousemove', handleMove);
+        canvas2d.addEventListener('mousedown', handleStart); canvas2d.addEventListener('mousemove', handleMove);
         window.addEventListener('mouseup', handleEnd);
         canvas2d.addEventListener('touchstart', handleStart, { passive: false });
         canvas2d.addEventListener('touchmove', handleMove, { passive: false });
         window.addEventListener('touchend', handleEnd);
 
-        // Zoom (Scroll)
         canvas2d.addEventListener('wheel', (e) => {
             e.preventDefault();
             const zoom = e.deltaY < 0 ? 1.1 : 0.9;
             const rect = canvas2d.getBoundingClientRect();
-            const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
-            offsetX = mx - (mx - offsetX) * zoom;
-            offsetY = my - (my - offsetY) * zoom;
-            scale *= zoom;
-            draw2D();
+            const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
+            offsetX = mx - (mx - offsetX) * zoom; offsetY = my - (my - offsetY) * zoom;
+            scale *= zoom; draw2D();
         }, { passive: false });
 
-        // Eleman Ekleme ve Güncelleme
         function addElement(x1, y1, x2, y2) {
-            const shape = document.getElementById('prop-shape').value;
-            const thickness = parseFloat(document.getElementById('prop-thickness').value) || 10;
-            const height = parseFloat(document.getElementById('prop-height').value) || 50;
-            const elevation = parseFloat(document.getElementById('prop-elevation').value) || 0;
-            const color = document.getElementById('prop-color').value || '#8a94a6';
-
             elements.push({
                 x1: x1, y1: y1, x2: x2, y2: y2,
-                shape: shape, thickness: thickness, height: height, elevation: elevation, color: color
+                shape: document.getElementById('prop-shape').value,
+                thickness: parseFloat(document.getElementById('prop-thickness').value) || 10,
+                height: parseFloat(document.getElementById('prop-height').value) || 40,
+                elevation: parseFloat(document.getElementById('prop-elevation').value) || 0,
+                color: document.getElementById('prop-color').value,
+                angle1: parseFloat(document.getElementById('prop-a1').value) || 0,
+                inv1: document.getElementById('prop-a1-inv').checked,
+                ax1: document.getElementById('prop-ax1').value,
+                angle2: parseFloat(document.getElementById('prop-a2').value) || 0,
+                inv2: document.getElementById('prop-a2-inv').checked,
+                ax2: document.getElementById('prop-ax2').value
             });
-            
-            selectedIndex = elements.length - 1; // Ekleneni seçili yap
-            updateTreeUI();
-            update3DScene();
-            setMode('select'); // Çizim bitince otomatik seçme moduna geç (kolaylık için)
+            selectedIndex = elements.length - 1;
+            updateTreeUI(); update3DScene(); setMode('select');
         }
 
         function findElementAt(x, y) {
@@ -471,12 +385,10 @@
                 if (el.shape === 'cylinder') {
                     if (Math.hypot(x - el.x1, y - el.y1) < (el.thickness/2 + 5/scale)) return i;
                 } else {
-                    // Çizgiye olan uzaklık
                     const l2 = Math.hypot(el.x2 - el.x1, el.y2 - el.y1) ** 2;
                     let t = l2 === 0 ? 0 : ((x - el.x1)*(el.x2 - el.x1) + (y - el.y1)*(el.y2 - el.y1)) / l2;
                     t = Math.max(0, Math.min(1, t));
-                    const px = el.x1 + t * (el.x2 - el.x1);
-                    const py = el.y1 + t * (el.y2 - el.y1);
+                    const px = el.x1 + t * (el.x2 - el.x1); const py = el.y1 + t * (el.y2 - el.y1);
                     if (Math.hypot(x - px, y - py) < (el.thickness/2 + 5/scale)) return i;
                 }
             }
@@ -485,128 +397,155 @@
 
         function draw2D() {
             ctx.clearRect(0, 0, canvas2d.width, canvas2d.height);
-            ctx.save();
-            ctx.translate(offsetX, offsetY);
-            ctx.scale(scale, scale);
+            ctx.save(); ctx.translate(offsetX, offsetY); ctx.scale(scale, scale);
+
+            if (mode === 'draw' && elements.length > 0) {
+                elements.forEach(el => {
+                    [ {x:el.x1, y:el.y1}, {x:el.x2, y:el.y2}, {x:(el.x1+el.x2)/2, y:(el.y1+el.y2)/2} ].forEach(p => {
+                        ctx.beginPath(); ctx.arc(p.x, p.y, 4/scale, 0, Math.PI*2);
+                        ctx.fillStyle = 'rgba(234, 179, 8, 0.4)'; ctx.fill();
+                    });
+                });
+            }
 
             elements.forEach((el, index) => {
                 const isSelected = (index === selectedIndex);
-                ctx.beginPath();
-                
                 if (el.shape === 'cylinder') {
-                    ctx.arc(el.x1, el.y1, el.thickness/2, 0, Math.PI * 2);
-                    ctx.fillStyle = el.color;
-                    ctx.fill();
+                    ctx.beginPath(); ctx.arc(el.x1, el.y1, el.thickness/2, 0, Math.PI * 2);
+                    ctx.fillStyle = el.color; ctx.fill();
+                    if(isSelected) { ctx.lineWidth = 3/scale; ctx.strokeStyle = '#3b82f6'; ctx.stroke(); }
                 } else {
-                    ctx.moveTo(el.x1, el.y1);
-                    ctx.lineTo(el.x2, el.y2);
-                    ctx.lineWidth = el.thickness;
-                    ctx.lineCap = "round";
-                    ctx.strokeStyle = el.color;
-                    ctx.stroke();
-                }
-                
-                // Seçili ise vurgula
-                if (isSelected) {
-                    ctx.lineWidth = el.shape === 'cylinder' ? 3/scale : el.thickness + 4/scale;
-                    ctx.strokeStyle = '#3b82f6';
+                    const dx = el.x2 - el.x1; const dy = el.y2 - el.y1;
+                    const len = Math.hypot(dx, dy) || 1;
+                    const nx = dx / len; const ny = dy / len;
+                    const px = -ny; const py = nx;
+                    const t = el.thickness / 2;
+                    
+                    const a1 = (el.inv1 ? -el.angle1 : el.angle1) * Math.PI / 180;
+                    const a2 = (el.inv2 ? -el.angle2 : el.angle2) * Math.PI / 180;
+                    
+                    // Sadece YATAY kesimlerde 2D çizim sündürülür
+                    const off1 = (el.ax1 === 'v') ? 0 : t * Math.tan(a1);
+                    const off2 = (el.ax2 === 'v') ? 0 : t * Math.tan(a2);
+
+                    const c1 = { x: el.x1 + px*t + nx*off1, y: el.y1 + py*t + ny*off1 };
+                    const c2 = { x: el.x1 - px*t - nx*off1, y: el.y1 - py*t - ny*off1 };
+                    const c3 = { x: el.x2 - px*t - nx*off2, y: el.y2 - py*t - ny*off2 };
+                    const c4 = { x: el.x2 + px*t + nx*off2, y: el.y2 + py*t + ny*off2 };
+
+                    ctx.beginPath();
+                    ctx.moveTo(c1.x, c1.y); ctx.lineTo(c2.x, c2.y);
+                    ctx.lineTo(c3.x, c3.y); ctx.lineTo(c4.x, c4.y);
+                    ctx.closePath();
+                    
+                    ctx.fillStyle = el.color; ctx.fill();
+                    ctx.lineWidth = isSelected ? 3/scale : 1/scale;
+                    ctx.strokeStyle = isSelected ? '#3b82f6' : '#27272a';
                     ctx.stroke();
                 }
             });
+
+            if (mode === 'draw' && drawStartPt) {
+                const endPos = currentSnap ? currentSnap : currentMousePos;
+                ctx.beginPath(); ctx.moveTo(drawStartPt.x, drawStartPt.y); ctx.lineTo(endPos.x, endPos.y);
+                ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2/scale; ctx.stroke();
+            }
+
+            if (currentSnap) {
+                ctx.beginPath(); ctx.arc(currentSnap.x, currentSnap.y, 6/scale, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981'; ctx.fill();
+                ctx.strokeStyle = 'white'; ctx.lineWidth = 2/scale; ctx.stroke();
+            }
+
             ctx.restore();
         }
 
-        // --- Sol Panel UI Güncellemeleri ---
         function fillPropertiesPanel(index) {
             selectedIndex = index;
             if (index === null) return;
+            
             const el = elements[index];
+            
+            // Uzunluk ve Açıyı Hesapla
+            const dx = el.x2 - el.x1; 
+            const dy = el.y2 - el.y1;
+            const len = Math.hypot(dx, dy);
+            let ang = Math.atan2(dy, dx) * 180 / Math.PI;
+            if (ang < 0) ang += 360;
+
+            document.getElementById('prop-length').value = Math.round(len * 10) / 10;
+            document.getElementById('prop-angle-pos').value = Math.round(ang * 10) / 10;
+            
             document.getElementById('prop-shape').value = el.shape;
             document.getElementById('prop-thickness').value = el.thickness;
             document.getElementById('prop-height').value = el.height;
             document.getElementById('prop-elevation').value = el.elevation;
             document.getElementById('prop-color').value = el.color;
+            document.getElementById('prop-a1').value = el.angle1 || 0;
+            document.getElementById('prop-a1-inv').checked = el.inv1 || false;
+            document.getElementById('prop-ax1').value = el.ax1 || 'h';
+            document.getElementById('prop-a2').value = el.angle2 || 0;
+            document.getElementById('prop-a2-inv').checked = el.inv2 || false;
+            document.getElementById('prop-ax2').value = el.ax2 || 'h';
             document.getElementById('lbl-thickness').innerText = el.shape === 'cylinder' ? 'Çap (cm)' : 'Kalınlık (cm)';
         }
-
-        document.getElementById('prop-shape').addEventListener('change', (e) => {
-            document.getElementById('lbl-thickness').innerText = e.target.value === 'cylinder' ? 'Çap (cm)' : 'Kalınlık (cm)';
-        });
 
         function updateSelected() {
             if (selectedIndex === null) return;
             const el = elements[selectedIndex];
+            
+            // Kullanıcıdan yeni uzunluk ve açı değerlerini al
+            const newLen = parseFloat(document.getElementById('prop-length').value) || 0.1;
+            const newAng = parseFloat(document.getElementById('prop-angle-pos').value) * Math.PI / 180 || 0;
+            
+            // Başlangıç noktasını (x1, y1) sabit tutup, bitiş noktasını yeni uzunluk ve açıya göre ayarla
+            el.x2 = el.x1 + newLen * Math.cos(newAng);
+            el.y2 = el.y1 + newLen * Math.sin(newAng);
+
             el.shape = document.getElementById('prop-shape').value;
             el.thickness = parseFloat(document.getElementById('prop-thickness').value) || 10;
-            el.height = parseFloat(document.getElementById('prop-height').value) || 50;
+            el.height = parseFloat(document.getElementById('prop-height').value) || 40;
             el.elevation = parseFloat(document.getElementById('prop-elevation').value) || 0;
             el.color = document.getElementById('prop-color').value;
+            el.angle1 = parseFloat(document.getElementById('prop-a1').value) || 0;
+            el.inv1 = document.getElementById('prop-a1-inv').checked;
+            el.ax1 = document.getElementById('prop-ax1').value;
+            el.angle2 = parseFloat(document.getElementById('prop-a2').value) || 0;
+            el.inv2 = document.getElementById('prop-a2-inv').checked;
+            el.ax2 = document.getElementById('prop-ax2').value;
             
-            draw2D();
-            update3DScene();
-            updateTreeUI();
+            draw2D(); update3DScene(); updateTreeUI();
         }
 
         function updateTreeUI() {
             const list = document.getElementById('tree-list');
-            if (elements.length === 0) {
-                list.innerHTML = '<p style="font-size:12px; color:#666;">Henüz parça yok. Çizime başla.</p>';
-                return;
-            }
-            
+            if (elements.length === 0) { list.innerHTML = '<p style="font-size:12px; color:#666;">Henüz parça yok.</p>'; return; }
             list.innerHTML = elements.map((el, i) => {
                 const icon = el.shape === 'cylinder' ? '🛢️' : '🧱';
-                const typeName = el.shape === 'cylinder' ? 'Silindir' : 'Plaka';
-                const activeCls = i === selectedIndex ? 'selected' : '';
-                return `
-                <div class="tree-item ${activeCls}" onclick="selectFromTree(${i})">
-                    <span>${icon} ${typeName} ${i+1}</span>
-                    <button class="del-btn" onclick="deleteElement(${i}, event)" title="Sil">✕</button>
+                return `<div class="tree-item ${i === selectedIndex ? 'selected' : ''}" onclick="selectFromTree(${i})">
+                    <span>${icon} Parça ${i+1}</span>
+                    <button class="del-btn" onclick="deleteElement(${i}, event)">✕</button>
                 </div>`;
             }).join('');
         }
 
-        function selectFromTree(index) {
-            setMode('select');
-            fillPropertiesPanel(index);
-            updateTreeUI();
-            draw2D();
-        }
-
+        function selectFromTree(index) { setMode('select'); fillPropertiesPanel(index); updateTreeUI(); draw2D(); }
         function deleteElement(index, e) {
-            e.stopPropagation(); // Tıklamanın item'ı seçmesini engelle
-            elements.splice(index, 1);
-            if (selectedIndex === index) {
-                selectedIndex = null;
-                fillPropertiesPanel(null);
-            } else if (selectedIndex > index) {
-                selectedIndex--;
-            }
-            updateTreeUI();
-            draw2D();
-            update3DScene();
+            e.stopPropagation(); elements.splice(index, 1);
+            if (selectedIndex === index) { selectedIndex = null; fillPropertiesPanel(null); } 
+            else if (selectedIndex > index) selectedIndex--;
+            updateTreeUI(); draw2D(); update3DScene();
         }
-        
-        function clearAll() {
-            if(confirm("Tüm tasarımı silmek istediğinize emin misiniz?")) {
-                elements = [];
-                selectedIndex = null;
-                updateTreeUI();
-                draw2D();
-                update3DScene();
-            }
-        }
+        function clearAll() { if(confirm("Tasarımı sil?")) { elements = []; selectedIndex = null; fillPropertiesPanel(null); updateTreeUI(); draw2D(); update3DScene(); } }
 
-        // --- 3D Three.js Motoru ---
+        // --- 3D GÖRÜNÜM ---
         let scene, camera, renderer, controls;
         
         function init3D() {
             const container = document.getElementById('canvas3d-container');
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a1a);
-
+            scene = new THREE.Scene(); scene.background = new THREE.Color(0x1a1a1a);
             camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 5000);
-            camera.position.set(300, 300, 300);
+            camera.position.set(200, 300, 200);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
@@ -614,28 +553,16 @@
             container.appendChild(renderer.domElement);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.maxPolarAngle = Math.PI / 2; // Zeminin altına inmeyi engelle
+            controls.enableDamping = true; controls.maxPolarAngle = Math.PI / 2;
 
-            // Işıklandırma
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            dirLight.position.set(200, 500, 300);
-            dirLight.castShadow = true;
+            dirLight.position.set(200, 500, 300); dirLight.castShadow = true;
             scene.add(dirLight);
 
-            // Zemin Grid'i
-            const gridHelper = new THREE.GridHelper(1000, 50, 0x444444, 0x222222);
-            scene.add(gridHelper);
-            
-            // Gölge alıcı görünmez zemin
-            const ground = new THREE.Mesh(
-                new THREE.PlaneGeometry(1000, 1000), 
-                new THREE.ShadowMaterial({ opacity: 0.3 })
-            );
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            scene.add(ground);
+            scene.add(new THREE.GridHelper(1000, 50, 0x444444, 0x222222));
+            const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.ShadowMaterial({ opacity: 0.3 }));
+            ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
             animate3D();
         }
@@ -643,30 +570,19 @@
         function resize3D() {
             if(!camera || !renderer) return;
             const container = document.getElementById('canvas3d-container');
-            // Mobilde gizliyken (width=0) hata vermemesi için kontrol
             if(container.clientWidth === 0) return; 
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(container.clientWidth, container.clientHeight);
         }
 
-        function animate3D() {
-            requestAnimationFrame(animate3D);
-            controls.update();
-            renderer.render(scene, camera);
-        }
+        function animate3D() { requestAnimationFrame(animate3D); controls.update(); renderer.render(scene, camera); }
 
         function update3DScene() {
-            // Sadece dinamik objeleri temizle (grid ve ışıklar kalsın)
             const objectsToRemove = [];
-            scene.children.forEach(child => {
-                if (child.isMesh && child.geometry.type !== 'PlaneGeometry') {
-                    objectsToRemove.push(child);
-                }
-            });
+            scene.children.forEach(child => { if (child.isMesh || child.isLineSegments) { if (child.geometry.type !== 'PlaneGeometry') objectsToRemove.push(child); } });
             objectsToRemove.forEach(obj => scene.remove(obj));
 
-            // Merkezleme hesaplaması
             let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
             elements.forEach(el => {
                 minX = Math.min(minX, el.x1, el.x2); maxX = Math.max(maxX, el.x1, el.x2);
@@ -675,53 +591,64 @@
             const cx = minX === Infinity ? 0 : (minX + maxX) / 2;
             const cz = minZ === Infinity ? 0 : (minZ + maxZ) / 2;
 
-            // Parçaları oluştur
             elements.forEach((el, index) => {
-                // Merkeze göre hizalama
-                const x1 = el.x1 - cx, z1 = el.y1 - cz;
-                const x2 = el.x2 - cx, z2 = el.y2 - cz;
-
-                const material = new THREE.MeshStandardMaterial({ 
-                    color: el.color, 
-                    roughness: 0.5,
-                    emissive: index === selectedIndex ? 0x113355 : 0x000000 // Seçiliyse hafif parlat
-                });
-                
+                const x1 = el.x1 - cx, z1 = el.y1 - cz, x2 = el.x2 - cx, z2 = el.y2 - cz;
+                const mat = new THREE.MeshStandardMaterial({ color: el.color, roughness: 0.5, emissive: index === selectedIndex ? 0x113355 : 0x000000 });
                 let mesh;
+                
                 if (el.shape === 'cylinder') {
                     const geo = new THREE.CylinderGeometry(el.thickness/2, el.thickness/2, el.height, 32);
-                    mesh = new THREE.Mesh(geo, material);
+                    mesh = new THREE.Mesh(geo, mat);
                     mesh.position.set(x1, el.elevation + el.height/2, z1);
+                    
+                    const edges = new THREE.EdgesGeometry(geo, 15);
+                    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 1 }));
+                    mesh.add(line);
                 } else {
-                    const length = Math.hypot(x2 - x1, z2 - z1) || 1;
+                    const length = Math.hypot(x2 - x1, z2 - z1) || 0.1;
                     const angle = Math.atan2(z2 - z1, x2 - x1);
+                    
                     const geo = new THREE.BoxGeometry(length, el.height, el.thickness);
-                    mesh = new THREE.Mesh(geo, material);
+                    const pos = geo.attributes.position;
+                    const a1 = (el.inv1 ? -el.angle1 : el.angle1) * Math.PI / 180;
+                    const a2 = (el.inv2 ? -el.angle2 : el.angle2) * Math.PI / 180;
+                    
+                    for(let i=0; i<pos.count; i++) {
+                        let vx = pos.getX(i); 
+                        let vy = pos.getY(i); // -H/2 ile +H/2 arası
+                        let vz = pos.getZ(i); // -T/2 ile +T/2 arası
+                        
+                        // SAÇMALAMAYI ÖNLEYEN MATEMATİK KİLİDİ:
+                        let shift1 = (el.ax1 === 'v') ? (vy) * Math.tan(a1) : vz * Math.tan(a1);
+                        let shift2 = (el.ax2 === 'v') ? (vy) * Math.tan(a2) : vz * Math.tan(a2);
+                        
+                        if (vx < 0) {
+                            // Başlangıç noktasını kaydır ama parçanın merkezini (0) geçmesine izin verme (içe çökmesini engeller)
+                            pos.setX(i, Math.min(-0.01, vx + shift1)); 
+                        } else {
+                            // Bitiş noktasını kaydır ama merkeze geçmesine izin verme
+                            pos.setX(i, Math.max(0.01, vx + shift2)); 
+                        }
+                    }
+                    geo.computeVertexNormals();
+                    
+                    mesh = new THREE.Mesh(geo, mat);
                     mesh.position.set((x1 + x2)/2, el.elevation + el.height/2, (z1 + z2)/2);
                     mesh.rotation.y = -angle;
+                    
+                    const edges = new THREE.EdgesGeometry(geo, 15);
+                    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 1 }));
+                    mesh.add(line);
                 }
-                
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                scene.add(mesh);
+                mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
             });
         }
 
-        // --- Başlatma ---
         window.onload = () => {
-            resize2D();
-            init3D();
-            
-            // Eğer mobildeysek, masaüstü görünümlü default tabı aktif et
-            if(window.innerWidth <= 850) {
-                switchMobileView('2d');
-            } else {
-                // Masaüstü: flex row olduğu için active class'ı ikisinde de kalsın
-                document.getElementById('pane-2d').classList.add('active');
-                document.getElementById('pane-3d').classList.add('active');
-            }
+            resize2D(); init3D();
+            if(window.innerWidth <= 850) switchMobileView('2d');
+            else { document.getElementById('pane-2d').classList.add('active'); document.getElementById('pane-3d').classList.add('active'); }
         };
-
     </script>
 </body>
 </html>
